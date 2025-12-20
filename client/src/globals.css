@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lilex:ital,wght@0,100..700;1,100..700&display=swap');
+
+:root{
+    margin:0;
+    padding:0;
+}
+
+@theme{
+    --font-inter: "Inter", montserrat;
+    --color-primary: #F0E3CA;
+    --color-background: #ff8c0a;
+    --color-secondary: #FF8303;
+    --color-tertiary: #9a3412;
+    --color-black: #1B1A17;
+}
