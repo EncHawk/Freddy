@@ -28,6 +28,22 @@ const inputSchema = zod.object({
     password:zod.string(),
 })
 
+async function emailSender(data:any){
+    const {error} = await resend.emails.send({
+        from: 'Freddy <freddy@resend.dev>',
+        to: [data.email],
+        subject: 'Welcome to Freddy!',
+        html: `<strong>Cheers to a long future,</strong>
+            <p>Here is your token, DO NOT DISCLOSE IT WITH ANYBODY.</p>
+            <i>${data?.unique_token}</i>
+        `,
+    })
+    if(error){
+
+        console.log(error.message)
+    }
+}
+
 app.get('/api/',(req,res)=>{
     return res.status(200).send({
         success:"true",
@@ -77,10 +93,11 @@ app.post('/api/signin', async(req,res)=>{
                         unique_token:token              
                     })
                     user.save()
+                    emailSender(user)
+                    console.log(user)
                     return res.status(200).send({
                         success:"true",
-                        msg:"used added successfully",
-                        token:token
+                        msg:"used added successfully, login to receive token",
                     })
                     
                 });
@@ -111,11 +128,26 @@ app.post('/api/login',async(req,res)=>{
     const check = await User.findOne({
         email:input.email,
     })
+    const emailSender = async ()=>{
+        const {error} = await resend.emails.send({
+            from: 'Freddy <freddy@resend.dev>',
+            to: [input.email],
+            subject: 'Welcome to Freddy!',
+            html: `<strong>Cheers to a long future,</strong>
+                <p>Here is your token, DO NOT DISCLOSE IT WITH ANYBODY.</p>
+                <i>${check?.unique_token}</i>
+            `,
+        });
+
+        if (error) {
+            console.error({ error });
+        }
+    }
     if(check){
+        emailSender();
         return res.status(200).send({
             success:"true",
-            msg:"Found user successfully, here's the token.",
-            token:check.unique_token
+            msg:"Found user successfully.",
         })
     }
 })
