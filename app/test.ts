@@ -7,18 +7,25 @@ const octokit = new Octokit({
   auth: process.env.Github_API_Token,
 });
 
-let lastCheckTime = "2020-01-01T00:00:00Z";
+let now = new Date()
+const fiveMins = 5*60*1000
+let timeInt  = new Date(now.getTime()-fiveMins)
+let lastCheckTime  = timeInt.toISOString()
 
-interface payload {
-  repo: string;
+interface jsonReturn{
+  author:string,
+  repo:string,
+  title:string,
+  issue_number:number,
+  body:string | null | undefined,
 }
 
-async function pollIssues(payload: payload) {
+export async function pollIssues(link:string) {
+  const jsonReturn:jsonReturn[]=[]
   // normalize URL (remove trailing slash)
-  const cleanRepo = payload.repo.replace(/\/$/, "");
+ const cleanRepo = link.replace(/\/$/, "");
   const parts = cleanRepo.split("/");
-
-  const owner = parts[3];
+  let owner = parts[3];
   const repo = parts[4];
 
   console.log(`Checking ${owner}/${repo}`);
@@ -28,19 +35,21 @@ async function pollIssues(payload: payload) {
       owner,
       repo,
       state: "open",
-      since: lastCheckTime,
-      per_page: 5,
+      per_page:6
     });
 
     console.log(`Fetched ${issues.length} items`);
 
     for (const issue of issues) {
       if ("pull_request" in issue) continue;
-
-      console.log(`Issue in ${owner}/${repo}`);
-      console.log(`Title: ${issue.title}`);
-      console.log(`Description: ${issue.body ?? "No description"}`);
-      console.log("-------------------");
+      console.log(`https://github.com/${owner}/${repo}/issues/${issue.number}`)
+      jsonReturn.push({
+        author:owner,
+        repo:repo,
+        title:issue.title,
+        issue_number:issue.number,
+        body:issue.body
+      })
     }
 
     if (issues.length > 0) {
@@ -49,6 +58,9 @@ async function pollIssues(payload: payload) {
   } catch (error) {
     console.error("Error fetching issues:", error);
   }
+  // console.log( jsonReturn);
+  return jsonReturn
 }
 
-pollIssues({ repo: "https://github.com/asyncapi/website/" });
+// pollIssues('https://github.com/asyncapi/generator')
+// export default pollIssues;

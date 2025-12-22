@@ -4,8 +4,8 @@ import dotenv from 'dotenv'
 import {pollIssues} from './test'
 dotenv.config()
 
-/* ───────────── TYPES ───────────── */
-
+const key = process.env.telegram_api
+console.log(key)
 interface SessionData {
   Repos: string[]
   CurrentAction: 'monitor' | 'list' | 'remove' | 'analyse' | null
@@ -13,8 +13,7 @@ interface SessionData {
 
 type CurrContext = Scenes.SceneContext<SessionData>
 
-/* ───────────── SCENE ───────────── */
-
+//declaring the scenes. 
 const HomeScene = new Scenes.BaseScene<CurrContext>('HomeScene')
 
 HomeScene.enter(async (ctx) => {
@@ -44,24 +43,20 @@ Commands:
   )
 })
 
-/* ───────────── STAGE ───────────── */
 
 const stage = new Scenes.Stage<CurrContext>([HomeScene])
 
-/* ───────────── BOT ───────────── */
 
 const bot = new Telegraf<CurrContext>("8328045325:AAEZJDHB0FatE8EkCsY_usE06Fvx8YfsH6w")
 
 bot.use(session())
 bot.use(stage.middleware())
 
-bot.start(async (ctx) => {
+bot.start((ctx) => {
   ctx.session ??= { Repos: [], CurrentAction: null }
   ctx.reply('Welcome to feddy bot, say /start to get going!')
-  await ctx.scene.enter('HomeScene')
+  ctx.scene.enter('HomeScene')
 })
-
-/* ───────────── SCENE ACTIONS ───────────── */
 
 HomeScene.action('Monitor', async (ctx) => {
   await ctx.answerCbQuery()
@@ -123,15 +118,24 @@ bot.on('text', async (ctx) => {
 
     case 'analyse': {
       ctx.session.CurrentAction = null
-      ctx.reply('Analysis pipeline coming soon.')
-      pollIssues(ctx.session.Repos)
+      // ctx.reply('Analysis pipeline coming soon.')
+      const repositories = ctx.session.Repos
+      const result = await Promise.all(
+        repositories.map(async(repo)=>{
+          const response = await pollIssues(repo)
+          if(!response){
+            return ""
+          }
+          return response
+        })
+      )
+      ctx.reply(`response found :${JSON.stringify(result)}`)
+      // pollIssues(ctx.session.Repos)
       return await ctx.scene.enter('HomeScene')
     }
   }
 })
-
-/* ───────────── LIFECYCLE ───────────── */
-
+// bot.on('')
 bot.launch()
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
