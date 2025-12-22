@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Telegraf, session, Scenes, Markup } from 'telegraf'
 import dotenv from 'dotenv'
-
+import {pollIssues} from './test'
 dotenv.config()
 
 /* ───────────── TYPES ───────────── */
@@ -124,6 +124,7 @@ bot.on('text', async (ctx) => {
     case 'analyse': {
       ctx.session.CurrentAction = null
       ctx.reply('Analysis pipeline coming soon.')
+      pollIssues(ctx.session.Repos)
       return await ctx.scene.enter('HomeScene')
     }
   }

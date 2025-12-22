@@ -1,33 +1,48 @@
 import { Octokit } from "@octokit/rest";
-import dotenv from 'dotenv'
-dotenv.config()
-const octokit = new Octokit({ auth:process.env.Token});
-// Keep track of the last issue we processed
-let lastCheckTime = new Date().toISOString();
-console.log('sip')
-interface payload{
-    owner:string,
-    repo:string,
-    state?:string
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const octokit = new Octokit({
+  auth: process.env.Github_API_Token,
+});
+
+let lastCheckTime = "2020-01-01T00:00:00Z";
+
+interface payload {
+  repo: string;
 }
-async function pollIssues(payload:payload) {
+
+async function pollIssues(payload: payload) {
+  // normalize URL (remove trailing slash)
+  const cleanRepo = payload.repo.replace(/\/$/, "");
+  const parts = cleanRepo.split("/");
+
+  const owner = parts[3];
+  const repo = parts[4];
+
+  console.log(`Checking ${owner}/${repo}`);
+
   try {
     const { data: issues } = await octokit.issues.listForRepo({
-      owner: payload.owner,
-      repo: payload.repo,
+      owner,
+      repo,
       state: "open",
-      since: lastCheckTime, // Only get issues updated since last check
+      since: lastCheckTime,
+      per_page: 5,
     });
 
+    console.log(`Fetched ${issues.length} items`);
+
     for (const issue of issues) {
-      // GitHub 'since' filter includes updates, so we check creation time
-        console.log(`preexisting Issue in ${payload.repo}:`);
-        console.log(`Title: ${issue.title}`);
-        console.log(`Description: ${issue.body}`);
-        console.log("-------------------");
+      if ("pull_request" in issue) continue;
+
+      console.log(`Issue in ${owner}/${repo}`);
+      console.log(`Title: ${issue.title}`);
+      console.log(`Description: ${issue.body ?? "No description"}`);
+      console.log("-------------------");
     }
 
-    // Update the timestamp to now
     if (issues.length > 0) {
       lastCheckTime = new Date().toISOString();
     }
@@ -36,5 +51,4 @@ async function pollIssues(payload:payload) {
   }
 }
 
-// Poll every 60 seconds
-export default pollIssues;
+pollIssues({ repo: "https://github.com/asyncapi/website/" });
