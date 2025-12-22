@@ -1,78 +1,137 @@
-import {Telegraf,session ,Context} from 'telegraf'
-import {message} from 'telegraf/filters'
-import mongoose from 'mongoose'
-import {User} from '../server/db'
+// @ts-nocheck
+import { Telegraf, session, Scenes, Markup } from 'telegraf'
 import dotenv from 'dotenv'
-// import {pollIssues} from './test'
+
 dotenv.config()
 
-const uri:any= process.env.Mongo_Url
-async function checkValiditty (token:string){
-    const conn = await mongoose.connect(uri)
-    if(!conn){
-        return 'it couldnt connect ffs'
+/* ───────────── TYPES ───────────── */
+
+interface SessionData {
+  Repos: string[]
+  CurrentAction: 'monitor' | 'list' | 'remove' | 'analyse' | null
+}
+
+type CurrContext = Scenes.SceneContext<SessionData>
+
+/* ───────────── SCENE ───────────── */
+
+const HomeScene = new Scenes.BaseScene<CurrContext>('HomeScene')
+
+HomeScene.enter(async (ctx) => {
+  ctx.session ??= { Repos: [], CurrentAction: null }
+
+  await ctx.reply(
+`Welcome to Freddy Bot.
+
+Commands:
+/monitor — add a GitHub repo  
+/list — list monitored repos  
+/remove — remove a repo  
+/analyse — analyse a repo`,
+    {
+      parse_mode: 'Markdown',
+      ...Markup.inlineKeyboard([
+        [
+          Markup.button.callback('Monitor a repo', 'Monitor'),
+          Markup.button.callback('List your repos', 'List'),
+        ],
+        [
+          Markup.button.callback('Remove a repo', 'Remove'),
+          Markup.button.callback('Analyse a repo', 'Analyse'),
+        ],
+      ]),
     }
-    const ppl = await User.find({
-        unique_token:token
-    })
-    return ppl
-}
-
-interface SessionData{
-    Repos: string[],
-    allow_store:boolean;
-}
-interface CurrContext extends Context{
-    session?:SessionData
-}
-
-const bot=new Telegraf<CurrContext>('8328045325:AAEZJDHB0FatE8EkCsY_usE06Fvx8YfsH6w')
-bot.use(session());
-
-
-bot.start((ctx) => ctx.reply('Welcome'))
-let takeIn = 0;
-bot.command('monitor',ctx=>{
-    ctx.session = {Repos:[],allow_store:false}
-    ctx.reply('send a valid url for a repo. (public preferably)') 
-    ctx.session.allow_store=true;
+  )
 })
 
-bot.on('text', ctx => {
-    if(takeIn){
-        ctx.session ??= { Repos: [], allow_store:true }  // Initialize if undefined
-        if(ctx.session?.allow_store){
-            ctx.session.Repos.push(ctx.text)
-        }
-        // ctx.reply(JSON.stringify(ctx.session.Repos))
-        ctx.session.allow_store=false;
+/* ───────────── STAGE ───────────── */
+
+const stage = new Scenes.Stage<CurrContext>([HomeScene])
+
+/* ───────────── BOT ───────────── */
+
+const bot = new Telegraf<CurrContext>("8328045325:AAEZJDHB0FatE8EkCsY_usE06Fvx8YfsH6w")
+
+bot.use(session())
+bot.use(stage.middleware())
+
+bot.start(async (ctx) => {
+  ctx.session ??= { Repos: [], CurrentAction: null }
+  ctx.reply('Welcome to feddy bot, say /start to get going!')
+  await ctx.scene.enter('HomeScene')
+})
+
+/* ───────────── SCENE ACTIONS ───────────── */
+
+HomeScene.action('Monitor', async (ctx) => {
+  await ctx.answerCbQuery()
+  ctx.session ??= { Repos: [], CurrentAction: 'monitor' }
+  ctx.session.CurrentAction = 'monitor'
+  await ctx.reply('Send a valid public GitHub repo URL.')
+})
+
+HomeScene.action('List', async (ctx) => {
+  await ctx.answerCbQuery()
+  const repos = ctx.session?.Repos ?? []
+  await ctx.reply(repos.length ? JSON.stringify(repos) : 'No repos monitored.')
+  return ctx.scene.enter("HomeScene")
+})
+
+HomeScene.action('Remove', async (ctx) => {
+  await ctx.answerCbQuery()
+  ctx.session ??= { Repos: [], CurrentAction: null }
+  ctx.session.CurrentAction = 'remove'
+  await ctx.reply('Send the repo name or org to remove.')
+})
+
+HomeScene.action('Analyse', async (ctx) => {
+  await ctx.answerCbQuery()
+  ctx.session ??= { Repos: [], CurrentAction: null }
+  ctx.session.CurrentAction = 'analyse'
+  await ctx.reply('Which repo do you want to analyse?')
+})
+
+/* ───────────── TEXT HANDLER ───────────── */
+
+bot.on('text', async (ctx) => {
+  ctx.session??={ Repos: [], CurrentAction: null }
+  ctx.session.Repos??=[]
+  const text = ctx.text.trim()
+
+  switch (ctx.session.CurrentAction) {
+    case 'monitor': {
+      if (!text.startsWith('https://github.com/')) {
+        ctx.session.CurrentAction = null
+        return ctx.reply('Invalid GitHub URL.')
+      }
+      ctx.session.Repos.push(text)
+      ctx.session.CurrentAction = null
+      ctx.reply(`Repo added:\n${text}`)
+      return await ctx.scene.enter('HomeScene')
     }
-    else{
-        ctx.reply('Freddy is Ready...')
-    }  
+
+    case 'remove': {
+      ctx.session.Repos = ctx.session.Repos.filter(repo => !repo.includes(text))
+      ctx.session.CurrentAction = null
+      ctx.reply(
+        ctx.session.Repos.length
+          ? JSON.stringify(ctx.session.Repos, null, 2)
+          : `Successfully removed ${text}`
+      )
+      return await ctx.scene.enter('HomeScene')
+    }
+
+    case 'analyse': {
+      ctx.session.CurrentAction = null
+      ctx.reply('Analysis pipeline coming soon.')
+      return await ctx.scene.enter('HomeScene')
+    }
+  }
 })
 
-bot.command('list',ctx => {
-    ctx.session??={Repos:[],allow_store:false}
-    ctx.reply(JSON.stringify(ctx.session.Repos))
-})
-
-bot.command('analyse', ctx=> {
-    ctx.reply('which repo do you wish to analyse')
-    ctx.session??={Repos:[],allow_store:false}
-    ctx.reply(JSON.stringify(ctx.session.Repos))
-})
-
-
-bot.command('remove',ctx=>{
-    ctx.reply('select the repository to remove.')
-    ctx.session??={Repos:[],allow_store:false}
-    ctx.reply(JSON.stringify(ctx.session.Repos))
-})
+/* ───────────── LIFECYCLE ───────────── */
 
 bot.launch()
 
-
-
-process.once('SIGINT',()=>bot.stop('SIGINT'))
-process.once('SIGINT',()=>bot.stop('SIGTERM'))
+process.once('SIGINT', () => bot.stop('SIGINT'))
+process.once('SIGTERM', () => bot.stop('SIGTERM'))
