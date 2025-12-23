@@ -119,7 +119,7 @@ bot.on('text', async (ctx) => {
     case 'analyse': {
       ctx.session.CurrentAction = null;
       const repositories = ctx.session.Repos;
-
+      let returnable = ''
       if (repositories.length === 0) {
         await ctx.reply("You aren't monitoring any repos. Use monitor command first.");
         return await ctx.scene.enter('HomeScene');
@@ -137,21 +137,26 @@ bot.on('text', async (ctx) => {
         );
 
         // We only want: Title, Repo Name, and a snippet of the Body.
-        const issues = rawResults.flat(2); // Flattens the nested arrays you had
+        const issues = rawResults.flat(); // Flattens the array of arrays
+        
+        if (!issues || issues.length === 0) {
+          await ctx.reply("No open issues found in monitored repos. Try monitoring repos with open issues.");
+          return await ctx.scene.enter('HomeScene');
+        }
         
         const formattedInput = issues.map((issue: any) => {
           // Remove URLs, images, and extra whitespace to save tokens/space
           const cleanBody = issue.body 
             ? issue.body.replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
                         .replace(/http\S+/g, '')         // Remove links
-                        // .substring(0, 500)               // Limit length
+                        .substring(0, 1000)               // Limit length to avoid token limits
                         .replace(/\s+/g, ' ')            // Normalize spaces
             : "No description provided";
 
           return `https://github.com/${issue.author}/${issue.repo}/issues/${issue.issue_number} \n REPO: ${issue.repo}\nTITLE: ${issue.title}\nISSUE: ${cleanBody} `;
         }).join("\n---\n");
 
-        if (!formattedInput) {
+        if (!formattedInput || formattedInput.trim().length === 0) {
           await ctx.reply("whoops, something went wrong. ensure there are open issues, try again.");
           return await ctx.scene.enter('HomeScene');
         }
@@ -162,7 +167,7 @@ bot.on('text', async (ctx) => {
         // ctx.reply('gand amrao')
       } catch (error) {
         console.error("Analysis Error:", error);
-        await ctx.reply(" Failed to process analysis. Check server logs.");
+        await ctx.reply(`Failed to process analysis: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       return await ctx.scene.enter('HomeScene');

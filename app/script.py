@@ -4,9 +4,12 @@ from huggingface_hub import InferenceClient
 from pydantic import BaseModel, Field
 from typing import List, Literal
 import json as json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-TOKEN = os.environ['Hf_token']
+TOKEN = os.getenv('Hf_token')
 # 2. Choose a model endpoint (You can find these on HF Model Hub)
 # Let's use a popular text generation model
 client  = InferenceClient(token=TOKEN)
@@ -48,7 +51,15 @@ def smart_format_input(input):
 
 def callApi (data):
     # print('reached LLM caller')
+    if not data or not data.strip():
+        sys.stderr.write('Error: Empty input data provided to API call!')
+        sys.exit(1)
+    
     transformedData= smart_format_input(input=data)
+    if not transformedData or not transformedData.strip():
+        sys.stderr.write('Error: Transformed data is empty after smart_format_input!')
+        sys.exit(1)
+    
     try:
         response = client.chat_completion (
             model=mistral_model,
@@ -83,9 +94,15 @@ def callApi (data):
         ) 
         # print(response.choices[0].message.content)
         present_Christmas = response.choices[0].message.content
-        print(present_Christmas) 
+        if present_Christmas:
+            print(present_Christmas)
+            return present_Christmas
+        else:
+            sys.stderr.write('Error: API returned empty message content!')
+            sys.exit(1)
     except Exception as e:
-        print(e)
+        sys.stderr.write(f'Error in API call: {str(e)}')
+        sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv)>1:
