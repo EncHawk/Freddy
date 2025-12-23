@@ -87,7 +87,6 @@ HomeScene.action('Analyse', async (ctx) => {
   await ctx.reply('Which repo do you want to analyse?')
 })
 
-/* ───────────── TEXT HANDLER ───────────── */
 
 bot.on('text', async (ctx) => {
   ctx.session??={ Repos: [], CurrentAction: null }
@@ -159,7 +158,6 @@ bot.on('text', async (ctx) => {
 
         const aiAnalysis = await inferPython(formattedInput);
         // console.log(formattedInput)
-        // We send the AI result. If it's too long, we use substring.
         await ctx.reply(`issue summary,AI analysis\n\n${aiAnalysis}`);
         // ctx.reply('gand amrao')
       } catch (error) {
