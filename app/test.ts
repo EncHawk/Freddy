@@ -63,4 +63,4 @@ export async function pollIssues(link:string) {
 }
 
 // pollIssues('https://github.com/asyncapi/generator')
-// export default pollIssues;
+export default pollIssues;

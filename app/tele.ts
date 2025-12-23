@@ -2,6 +2,7 @@
 import { Telegraf, session, Scenes, Markup } from 'telegraf'
 import dotenv from 'dotenv'
 import {pollIssues} from './test'
+import inferPython from './runner'
 dotenv.config()
 
 const key = process.env.telegram_api
@@ -117,21 +118,56 @@ bot.on('text', async (ctx) => {
     }
 
     case 'analyse': {
-      ctx.session.CurrentAction = null
-      // ctx.reply('Analysis pipeline coming soon.')
-      const repositories = ctx.session.Repos
-      const result = await Promise.all(
-        repositories.map(async(repo)=>{
-          const response = await pollIssues(repo)
-          if(!response){
-            return ""
-          }
-          return response
-        })
-      )
-      ctx.reply(`response found :${JSON.stringify(result)}`)
-      // pollIssues(ctx.session.Repos)
-      return await ctx.scene.enter('HomeScene')
+      ctx.session.CurrentAction = null;
+      const repositories = ctx.session.Repos;
+
+      if (repositories.length === 0) {
+        await ctx.reply("You aren't monitoring any repos. Use monitor command first.");
+        return await ctx.scene.enter('HomeScene');
+      }
+
+      await ctx.reply("Fetching and analyzing issues... HOLLUP.");
+
+      try {
+        // 1. Fetch data from all repos
+        const rawResults = await Promise.all(
+          repositories.map(async (repo) => {
+            const response = await pollIssues(repo);
+            return response || []; // Ensure it returns an array even on failure
+          })
+        );
+
+        // We only want: Title, Repo Name, and a snippet of the Body.
+        const issues = rawResults.flat(2); // Flattens the nested arrays you had
+        
+        const formattedInput = issues.map((issue: any) => {
+          // Remove URLs, images, and extra whitespace to save tokens/space
+          const cleanBody = issue.body 
+            ? issue.body.replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+                        .replace(/http\S+/g, '')         // Remove links
+                        // .substring(0, 500)               // Limit length
+                        .replace(/\s+/g, ' ')            // Normalize spaces
+            : "No description provided";
+
+          return `https://github.com/${issue.author}/${issue.repo}/issues/${issue.issue_number} \n REPO: ${issue.repo}\nTITLE: ${issue.title}\nISSUE: ${cleanBody} `;
+        }).join("\n---\n");
+
+        if (!formattedInput) {
+          await ctx.reply("whoops, something went wrong. ensure there are open issues, try again.");
+          return await ctx.scene.enter('HomeScene');
+        }
+
+        const aiAnalysis = await inferPython(formattedInput);
+        // console.log(formattedInput)
+        // We send the AI result. If it's too long, we use substring.
+        await ctx.reply(`issue summary,AI analysis\n\n${aiAnalysis}`);
+        // ctx.reply('gand amrao')
+      } catch (error) {
+        console.error("Analysis Error:", error);
+        await ctx.reply(" Failed to process analysis. Check server logs.");
+      }
+
+      return await ctx.scene.enter('HomeScene');
     }
   }
 })
