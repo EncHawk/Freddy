@@ -28,25 +28,45 @@ class repo_identifier(BaseModel):
 def smart_format_input(input):
     output_schema = repo_identifier.model_json_schema()
     output_final = json.dumps(output_schema)
-    systemMessage="""
-        assume your role as a intermediary to the backend and the validation team. the backend team is gonna send a bunch of issues from github,
-        and their titles, author names, and the issue numbers. your task is to reduce the effort for the validation team to read the body of the issue.
-        input:{
-            "url": 'https://github.com/${issue.author}/${issue.repo}/issues/${issue.issue_number}' (retain this, send this url constructed based on the input for each of the repos)
-            "REPO": name of the repository in the url its (issue.repo)
+    
+    # Count issues in input to ensure all are processed
+    issue_count = input.count('https://github.com/')
+    
+    systemMessage=f"""
+        CRITICAL: You MUST process ALL {issue_count} issues provided in the input. Do NOT skip any issues.
+        
+        Assume your role as an intermediary to the backend and the validation team. The backend team is sending multiple GitHub issues,
+        and their titles, author names, and issue numbers. Your task is to reduce the effort for the validation team to read the body of each issue.
+        
+        Input format for EACH issue:
+        {{
+            "url": 'https://github.com/${{issue.author}}/${{issue.repo}}/issues/${{issue.issue_number}}' (retain this, send this url constructed based on the input for each of the repos)
+            "REPO": name of the repository in the url (issue.repo)
             "TITLE": title of the repository, not part of the url, contains the title of the repo.
-            "Issue": This contains the body of the issue, or rather the contents of it. this is where you come in
-        }
+            "ISSUE": This contains the body of the issue, or rather the contents of it. This is where you come in
+        }}
+
+        
+        STRICT RULES:
+        1. YOU MUST PROCESS EVERY SINGLE ISSUE PROVIDED - IF THERE ARE {issue_count} ISSUES, YOU MUST OUTPUT {issue_count} ISSUES IN THE RESPONSE
+        2. COUNT THE ISSUES IN THE INPUT AND VERIFY YOU PROCESSED ALL OF THEM
+        3. DO NOT SKIP ANY ISSUES - PROCESS THEM IN THE ORDER THEY APPEAR
+        4. DO NOT CHANGE THE TITLE OR CONTENT WHATSOEVER EXCEPT THE ISSUE BODY. 
+        5. THE OUTPUT MUST ALWAYS FOLLOW THE OUTPUT SCHEMA THAT IS PROVIDED.
+        6. THE CHARECTER LIMIT FOR EACH OF THE ISSUE'S CONCLUSION IS STRICTLY 400.
+        
         Instructions:
-        in the issue part where the body of the issue is concentrated make a bunch of cuts removing redundant information.
-        but at the same time add context by paying attention to the files named,priority if mentioned, and maybe the tech stack from what you gather (leave out if insuffiecient information).
-        make sure the output is strictly following this schema:
+        - In the issue part where the body of the issue is concentrated, make cuts removing redundant information
+        - Add context by paying attention to files named, priority if mentioned, and maybe the tech stack from what you gather (leave out if insufficient information)
+        - Make sure the output is strictly following this schema and includes ALL issues:
+        - Author in the output is meant for strictly the name of the organisation. 
         
     """+output_final
+    
     sendBack = client.chat_completion(model=summary_model,messages=[
         {"role":"system","content":systemMessage},
         {"role":"user","content" : input}
-    ], max_tokens=1000)
+    ], max_tokens=3000)  # Increased from 1000 to handle multiple issues
     return sendBack.choices[0].message.content
 
 def callApi (data):
@@ -61,9 +81,12 @@ def callApi (data):
         sys.exit(1)
     
     try:
+        # Count issues in transformed data to ensure all are processed
+        issue_count_in_transformed = transformedData.count('https://github.com/')
+        
         response = client.chat_completion (
             model=mistral_model,
-            messages=[{"role":"system", "content":"""Assume the role of an AI backend component assisting open-source contributors.
+            messages=[{"role":"system", "content":f"""Assume the role of an AI backend component assisting open-source contributors.
                         Analyze the provided GitHub issue data, there might be multiple issues separate each of them using a -- block for ease of reading.
                         which is gonna be in this format (only an example, assume the same input format always):
                         https://github.com/asyncapi/website/issues/4758 
@@ -90,7 +113,7 @@ def callApi (data):
                         If multiple issues are provided, separate them with a horizontal line (---).
                         """},
                         {"role":"user", "content":transformedData}],
-            max_tokens= 500
+            max_tokens= 1000  # Increased from 500 to handle multiple issues (500 words per issue * multiple issues)
         ) 
         # print(response.choices[0].message.content)
         present_Christmas = response.choices[0].message.content
