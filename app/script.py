@@ -4,10 +4,9 @@ from huggingface_hub import InferenceClient
 from pydantic import BaseModel, Field
 from typing import List, Literal
 import json as json
-import dotenv
 
-# 1. Setup - Paste your token here
-TOKEN = "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"
+
+TOKEN = os.environ['Hf_token']
 # 2. Choose a model endpoint (You can find these on HF Model Hub)
 # Let's use a popular text generation model
 client  = InferenceClient(token=TOKEN)
