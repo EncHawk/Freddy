@@ -8,7 +8,7 @@ const cn = (...inputs)=>{
 
 export const Container = ({children})=>{
     return(
-        <div className={cn("font-inter w-full max-w-5xl mx-auto py-2 px-4 md:py-8 ")}>
+        <div className={cn(" relative font-inter w-full max-w-5xl md:max-w-3xl mx-auto py-2 px-4 md:py-8 ")}>
         {children}
     </div>
     )

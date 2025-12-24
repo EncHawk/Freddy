@@ -15,7 +15,7 @@ export const Navbar = ()=>{
         <div 
             id = "navbar"
         className={`fixed top-4 left-1/2 -translate-x-1/2
-             flex items-center justify-between mx-auto py-2 px-2 rounded-full w-full max-w-4xl z-10
+             flex items-center justify-between mx-auto py-2 px-2 rounded-full w-full max-w-3xl z-10
             ${scrolled
                 ?"backdrop-blur-lg border-[0.5px] border-neutral-500/20 inset-shadow-sm"
                 :"bg-transparent "
