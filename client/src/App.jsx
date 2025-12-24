@@ -3,14 +3,16 @@ import './globals.css'
 import { Navbar } from './components/navbar'
 import {Container} from './components/container'
 import { Hero } from './components/hero'
+import{CharecterGrid} from './components/contentGrid'
+import demo from './assets/demo-light.png'
 
 function App() {
   return (
       <div className='flex relative flex-col min-h-screen items-center bg-linear-to-b 
-      from-neutral-200 to-indigo-200
+      from-neutral-100 to-blue-300/90
       '
       >
-        <div className='max-w-5xl w-full h-full absolute inset-0 mx-auto pointer-events-none'>
+        <div className='max-w-5xl w-full h-full absolute inset-0 mx-auto pointer-events-none '>
           <div id="vertical-line" className='absolute inset-y-0 left-0 h-100% w-[0.5px] 
             bg-linear-to-b from-transparent via-neutral-600/40 to-transparent 
           '></div>
@@ -22,6 +24,10 @@ function App() {
           <Navbar/>
           <Hero/>
         </Container>
+        <div className="bg-neutral-200 rounded-lg p-0.5 max-w-4xl mask-b-from-50% mask-b-to-100%">
+          <img className="rounded-lg " src={demo} w-450 h-400/>
+        </div>
+        <CharecterGrid/>
       </div>
   )
 }
