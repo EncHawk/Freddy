@@ -1,12 +1,11 @@
 import mongoose, {Schema} from 'mongoose';
 import dotenv from 'dotenv'
+import{MongoUrl} from './globals'
 
 dotenv.config()
 
-const connString:any= process.env.Mongo_Url;
-
 try{
-    const stuff = await mongoose.connect(connString)
+    const stuff = await mongoose.connect(MongoUrl)
     // console.log(stuff)
 }
 catch(err:any){

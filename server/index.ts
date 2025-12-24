@@ -1,21 +1,28 @@
-import express, { response } from 'express'
+import express from 'express'
 import {User} from './db'
-import { errorHandler } from './errorHandler'
 import * as zod from 'zod'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import dotenv from 'dotenv'
-import {Resend} from 'resend'
-
-dotenv.config()
+import nodemailer from 'nodemailer'
+import { email_id, JWT_Secret, email_pass} from './globals'
 
 const app = express();
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // or 'outlook', 'yahoo', etc.
+  auth: {
+    user: email_id,
+    pass: email_pass // Use app password, not regular password
+  }
+});
+
+
+
 app.use(express.json());
-app.use(errorHandler)
+// app.use(errorHandler)
 const saltRounds =12;
-const secret:any= process.env.JWT_Secret
-const resend = new Resend(process.env.Resend_Api_Key)
+// const secret:any= process.env.JWT_Secret
+
 
 
 app.listen('8080',()=>{
@@ -28,21 +35,6 @@ const inputSchema = zod.object({
     password:zod.string(),
 })
 
-async function emailSender(data:any){
-    const {error} = await resend.emails.send({
-        from: 'Freddy <freddy@resend.dev>',
-        to: [data.email],
-        subject: 'Welcome to Freddy!',
-        html: `<strong>Cheers to a long future,</strong>
-            <p>Here is your token, DO NOT DISCLOSE IT WITH ANYBODY.</p>
-            <i>${data?.unique_token}</i>
-        `,
-    })
-    if(error){
-
-        console.log(error.message)
-    }
-}
 
 app.get('/api/',(req,res)=>{
     return res.status(200).send({
@@ -55,9 +47,11 @@ app.post('/api/signin', async(req,res)=>{
     const input = req.body
     const name = input.name
     const email = input.email
+    const password = input.password
     const payload = {
         name,
-        email
+        email,
+        password
     }
     try{
         const response = await zod.parseAsync(inputSchema,input)
@@ -85,7 +79,7 @@ app.post('/api/signin', async(req,res)=>{
                             msg:"crypting went wrong try again."
                         })
                     }
-                    const token =  jwt.sign(payload,secret)
+                    const token =  jwt.sign(payload,JWT_Secret)
                     const user = new User({
                         name:input.name,
                         password:hash,
@@ -93,7 +87,6 @@ app.post('/api/signin', async(req,res)=>{
                         unique_token:token              
                     })
                     user.save()
-                    emailSender(user)
                     console.log(user)
                     return res.status(200).send({
                         success:"true",
@@ -110,44 +103,67 @@ app.post('/api/signin', async(req,res)=>{
             }
         }
     }
-    catch(err){
+    catch(err:any){
+        console.log(err.message)
         return res.status(500).send({
             success:"fail",
-            msg:"something went wrong try again."
+            msg:"something went wrong try again.",
+            sutf:err.message
         })
     }
 })
 
 app.post('/api/login',async(req,res)=>{
-    // when user logs in they shd be verified with the db. 
-    // using their emails aloen for now(jwt later)
-    // further using the resend api we shd send them an email about a certain unique token
-    // when they send that token to the app it shd match. simple. NOT JWT.
-    // we only need their credentials. no need of token, so if credentials are in the header its enf.
     const input = req.body
+    const password = input.password
     const check = await User.findOne({
         email:input.email,
     })
-    const emailSender = async ()=>{
-        const {error} = await resend.emails.send({
-            from: 'Freddy <freddy@resend.dev>',
-            to: [input.email],
-            subject: 'Welcome to Freddy!',
-            html: `<strong>Cheers to a long future,</strong>
-                <p>Here is your token, DO NOT DISCLOSE IT WITH ANYBODY.</p>
-                <i>${check?.unique_token}</i>
-            `,
-        });
-
-        if (error) {
-            console.error({ error });
-        }
+    if(!check){
+        return res.status(400).send({
+            success:"false",
+            msg:"invalid credentials, try again."
+        })
     }
-    if(check){
-        emailSender();
-        return res.status(200).send({
-            success:"true",
-            msg:"Found user successfully.",
+    const hash:any= check?.password
+    const correct = await bcrypt.compare(password, hash)
+    if(correct){
+        const mailOptions ={
+            from:email_id,
+            to:input.email,
+            subject:"Welcome to Freddy Bot! Loads of PR's to be merged together.",
+            html:`Hello there! I'm Freddy the OSS bear. Im here to help you achieve the best PR's in town!
+                Hoping to see you soon on Telegram, Don't worry, I dont bite :) \n
+                https://t.me/FREDDY_OPENSOURCE_BOT \n
+                
+                signing off, your friendly neighbourhood open source bear,
+                Freddy.
+
+            \n \n <p>in all seriousness, freddy bot is a dear project to me since I've always struggled with finding the PR on time</p>
+                <p>The whole point is to keep this project as open source as possible and help the beginners get upto speed with the open source culture</p>
+                <strong>Although some part of this may seem scary, trust me i use the app too. <br/> I only wish the best for you and every single person that is passionate about open source development</strong>
+            `
+        }
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log('Error:', error);
+                return res.status(403).send({
+                    success:"false",
+                    msg:"validation failed, try again."
+                })
+            } else {
+                console.log('Email sent:', info.response);
+                return res.status(200).send({
+                    success:"true",
+                    msg:"validation successful, check your email"
+                })
+            }
+        });
+    }
+    else{
+        return res.status(403).send({
+            success:"false",
+            msg:"incorrect password. try again or try forgot password."
         })
     }
 })

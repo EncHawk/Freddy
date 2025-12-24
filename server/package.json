@@ -5,12 +5,13 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.97",
+    "@types/nodemailer": "^7.0.4",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.2",
-    "resend": "^6.6.0",
+    "nodemailer": "^7.0.12",
     "telegraf": "^4.16.3",
     "zod": "^4.2.1"
   }
