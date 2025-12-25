@@ -9,10 +9,15 @@
 }
 body{
     /* background: white; */
+
+}
+.no-scroll{
+    overflow: hidden;
 }
 @theme{
     --font-inter: "Inter", montserrat;
     --font-faulty : "Faulty Glyphic" , "Lilex";
+    --font-lilex:"Lilex";
     --color-primary: #F0E3CA;
     --color-background: #ff8c0a;
     --color-secondary: #FF8303;

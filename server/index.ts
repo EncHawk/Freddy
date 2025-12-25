@@ -5,19 +5,24 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
 import { email_id, JWT_Secret, email_pass} from './globals'
+import cors from 'cors'
+
+
+const transporter = nodemailer.createTransport({
+service: 'gmail', // or 'outlook', 'yahoo', etc.
+auth: {
+user: email_id,
+pass: email_pass // Use app password, not regular password
+}
+});
 
 const app = express();
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // or 'outlook', 'yahoo', etc.
-  auth: {
-    user: email_id,
-    pass: email_pass // Use app password, not regular password
-  }
-});
-
-
-
+app.use(cors({
+    origin:'http://localhost:5173',
+    optionsSuccessStatus:200,
+    credentials:true
+}))
 app.use(express.json());
 // app.use(errorHandler)
 const saltRounds =12;

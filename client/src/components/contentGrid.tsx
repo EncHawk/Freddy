@@ -9,13 +9,13 @@ import list from '../assets/list.png'
 export const CharecterGrid = ()=>{
     return (
       <div className='bg-neutral-200 w-full'>
-        <div className='isolation-isolate flex flex-col items-center justify-center py-8 px-2 w-full bg-neutral-100  text-center
+        <div className='isolation-isolate flex flex-col items-center justify-center py-6 sm:py-8 px-4 sm:px-6 md:px-2 w-full bg-neutral-100  text-center
             mask-b-from-90% mask-b-to-100%
           '>
-            <h1 className='text-4xl font-medium mt-20'>
-              Made for <span className='px-px text-5xl bg-linear-to-r text-transparent from-blue-600 via-purple-400 50% to-orange-600 bg-clip-text'>Ambitious</span> <br/> Open Source contributors
+            <h1 className='text-2xl sm:text-3xl md:text-4xl font-medium mt-12 sm:mt-16 md:mt-20 px-2'>
+              Made for <span className='px-px text-3xl sm:text-4xl md:text-5xl bg-linear-to-r text-transparent from-blue-600 via-purple-400 50% to-orange-600 bg-clip-text'>Ambitious</span> <br/> Open Source contributors
             </h1>
-              <div className='grid grid-cols-2 gap-6 items-center mx-auto text-center mt-8 w-full max-w-7xl '>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-center mx-auto text-center mt-6 sm:mt-8 w-full max-w-7xl px-2 sm:px-4'>
                 <Card 
                 img={monitor}
                 title="Monitor Repositories"
