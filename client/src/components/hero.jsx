@@ -22,7 +22,7 @@ export const Hero = ()=>{
              text-xs font-inter transition-all duration-300font-medium md:font-semibold cursor-pointer
              md:py-2 md:px-2
              bg-size-200% bg-left hover:bg-right border-[0.5px] border-neutral-400 shadow-sm
-             hover:bg-linear-to-r hover:from-blue-400  hover:to-orange-400 hover:text-sky-100 hover:text-shadow-md'> 
+             hover:bg-linear-to-r hover:from-blue-400  hover:to-orange-400 hover:text-sky-100 hover:text-shadow-md tracking-tight mb-4'> 
                 Get Ahead of the pack for GSOC'26!
             </div>
             <h1 className='text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-md text-center max-w-[95%] sm:max-w-3xl md:max-w-200 leading-tight sm:leading-20 tracking-tightest px-2'>
@@ -45,7 +45,7 @@ export const Hero = ()=>{
             <button onClick={()=>{setLogin(true)}} className='bg-transparent cursor-pointer border border-black hover:bg-orange-100 transition duration-150 py-2 px-4 sm:py-2 sm:px-6 text-sm sm:text-base'>
                 Sign Up
             </button>
-            <span className='text-black text-xs bg-neutral-300 px-2 py-1 rounded-lg mt-2 text-center'> check email if logged in.</span>
+            <span className='text-black text-xs bg-neutral-300 px-2 py-1 rounded-lg mt-2 text-center'> check email if signed in.</span>
             {login && <Form onClose={()=>{setLogin(false)}}/>}
         </div>
     )

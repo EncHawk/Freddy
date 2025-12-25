@@ -1,4 +1,14 @@
 {
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts",
+    "start:node": "tsx index.ts",
+    "dev": "bun run --watch index.ts",
+    "dev:node": "tsx watch index.ts",
+    "server": "bun run index.ts"
+  },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
@@ -16,5 +26,8 @@
     "nodemailer": "^7.0.12",
     "telegraf": "^4.16.3",
     "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }
