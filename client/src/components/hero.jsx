@@ -42,11 +42,11 @@ export const Hero = ()=>{
                 <br className='hidden sm:block'/>
                 <span className='block sm:inline'>Up your Open Source game today!</span>
             </p>
-            <button onClick={()=>{setLogin(true)}} className='bg-transparent cursor-pointer border border-black hover:bg-orange-100 transition duration-150 py-2 px-4 sm:py-2 sm:px-6 text-sm sm:text-base'>
-                Sign Up
+            <button className='bg-transparent cursor-pointer border border-black hover:bg-orange-100 transition duration-150 py-2 px-4 sm:py-2 sm:px-6 text-sm sm:text-base'>
+                <a href="https://t.me/FREDDY_OPENSOURCE_BOT" target="_blank">
+                    Visit Bot
+                </a>
             </button>
-            <span className='text-black text-xs bg-neutral-300 px-2 py-1 rounded-lg mt-2 text-center'> check email if signed in.</span>
-            {login && <Form onClose={()=>{setLogin(false)}}/>}
         </div>
     )
 }
