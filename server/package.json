@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "bun run index.ts",
+    "start": "tsc index.ts && node ./dist/index.js",
     "start:node": "tsx index.ts",
     "dev": "bun run --watch index.ts",
     "dev:node": "tsx watch index.ts",
