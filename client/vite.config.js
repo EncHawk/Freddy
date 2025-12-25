@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   server:[{
-    '/api':'http://localhost:8080/'
+    '/api':'freddy-ten.vercel.app'
   }],
   plugins: [
     react(),
