@@ -122,17 +122,11 @@ app.post('/api/signin', async(req,res)=>{
                                 success:"false",
                                 msg:"validation failed, try again."
                             })
-                        } else {
-                            console.log('Email sent:', info.response);
-                            return res.status(200).send({
-                                success:"true",
-                                msg:"validation successful, check your email"
-                            })
                         }
                     });
                     return res.status(200).send({
                         success:"true",
-                        msg:"used added successfully, login to receive token",
+                        msg:"used added successfully, check your email!",
                     })
                     
                 });
