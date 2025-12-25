@@ -15,7 +15,6 @@ dist-ssr
 globals.ts
 
 # Editor directories and files
-app/*
 .vscode/*
 !.vscode/extensions.json
 .idea
