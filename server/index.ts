@@ -4,8 +4,14 @@ import * as zod from 'zod'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
-import { email_id, JWT_Secret, email_pass} from './globals'
 import cors from 'cors'
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+const email_id = process.env.emailid
+const email_pass = process.env.emailpass
+const JWT_Secret = process.env.jwtsecret
 
 
 const transporter = nodemailer.createTransport({
@@ -93,6 +99,37 @@ app.post('/api/signin', async(req,res)=>{
                     })
                     user.save()
                     console.log(user)
+                    const mailOptions ={
+                        from:email_id,
+                        to:input.email,
+                        subject:"Welcome to Freddy Bot! Loads of PR's to be merged together.",
+                        html:`Hello there! I'm Freddy the OSS bear. Im here to help you achieve the best PR's in town!
+                            Hoping to see you soon on Telegram, Don't worry, I dont bite :) \n
+                            https://t.me/FREDDY_OPENSOURCE_BOT \n
+                            
+                            signing off, your friendly neighbourhood open source bear,
+                            Freddy.
+
+                        \n \n <p>in all seriousness, freddy bot is a dear project to me since I've always struggled with finding the PR on time</p>
+                            <p>The whole point is to keep this project as open source as possible and help the beginners get upto speed with the open source culture</p>
+                            <strong>Although some part of this may seem scary, trust me i use the app too. <br/> I only wish the best for you and every single person that is passionate about open source development</strong>
+                        `
+                    }
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            console.log('Error:', error);
+                            return res.status(403).send({
+                                success:"false",
+                                msg:"validation failed, try again."
+                            })
+                        } else {
+                            console.log('Email sent:', info.response);
+                            return res.status(200).send({
+                                success:"true",
+                                msg:"validation successful, check your email"
+                            })
+                        }
+                    });
                     return res.status(200).send({
                         success:"true",
                         msg:"used added successfully, login to receive token",
@@ -114,61 +151,6 @@ app.post('/api/signin', async(req,res)=>{
             success:"fail",
             msg:"something went wrong try again.",
             sutf:err.message
-        })
-    }
-})
-
-app.post('/api/login',async(req,res)=>{
-    const input = req.body
-    const password = input.password
-    const check = await User.findOne({
-        email:input.email,
-    })
-    if(!check){
-        return res.status(400).send({
-            success:"false",
-            msg:"invalid credentials, try again."
-        })
-    }
-    const hash:any= check?.password
-    const correct = await bcrypt.compare(password, hash)
-    if(correct){
-        const mailOptions ={
-            from:email_id,
-            to:input.email,
-            subject:"Welcome to Freddy Bot! Loads of PR's to be merged together.",
-            html:`Hello there! I'm Freddy the OSS bear. Im here to help you achieve the best PR's in town!
-                Hoping to see you soon on Telegram, Don't worry, I dont bite :) \n
-                https://t.me/FREDDY_OPENSOURCE_BOT \n
-                
-                signing off, your friendly neighbourhood open source bear,
-                Freddy.
-
-            \n \n <p>in all seriousness, freddy bot is a dear project to me since I've always struggled with finding the PR on time</p>
-                <p>The whole point is to keep this project as open source as possible and help the beginners get upto speed with the open source culture</p>
-                <strong>Although some part of this may seem scary, trust me i use the app too. <br/> I only wish the best for you and every single person that is passionate about open source development</strong>
-            `
-        }
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log('Error:', error);
-                return res.status(403).send({
-                    success:"false",
-                    msg:"validation failed, try again."
-                })
-            } else {
-                console.log('Email sent:', info.response);
-                return res.status(200).send({
-                    success:"true",
-                    msg:"validation successful, check your email"
-                })
-            }
-        });
-    }
-    else{
-        return res.status(403).send({
-            success:"false",
-            msg:"incorrect password. try again or try forgot password."
         })
     }
 })
