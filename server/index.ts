@@ -25,7 +25,7 @@ pass: email_pass // Use app password, not regular password
 const app = express();
 
 app.use(cors({
-    origin:'http://localhost:5173',
+    origin:'https://frontend-freddy.vercel.app/',
     optionsSuccessStatus:200,
     credentials:true
 }))
@@ -36,8 +36,9 @@ const saltRounds =12;
 
 
 
-app.listen(process.env.PORT,()=>{
-    console.log('server up and running at 8080')
+const PORT = process.env.PORT || 8080
+app.listen(PORT,()=>{
+    console.log(`server up and running at ${PORT}`)
 })
 
 const inputSchema = zod.object({
@@ -97,7 +98,7 @@ app.post('/api/signin', async(req,res)=>{
                         email:input.email,
                         unique_token:token              
                     })
-                    user.save()
+                    await user.save()
                     console.log(user)
                     const mailOptions ={
                         from:email_id,
@@ -117,16 +118,16 @@ app.post('/api/signin', async(req,res)=>{
                     }
                     transporter.sendMail(mailOptions, (error, info) => {
                         if (error) {
-                            console.log('Error:', error);
-                            return res.status(403).send({
-                                success:"false",
-                                msg:"validation failed, try again."
-                            })
+                            console.log('Error sending email:', error);
+                            // Don't send response here as it's already sent below
+                        } else {
+                            console.log('Email sent:', info.response);
                         }
                     });
+                    // Send response only once, after user is saved
                     return res.status(200).send({
                         success:"true",
-                        msg:"used added successfully, check your email!",
+                        msg:"user added successfully, check your email!",
                     })
                     
                 });
