@@ -6,8 +6,8 @@ import { Command } from "./command";
 
 export const Documentation = ()=>{
    return(
-     <div id="documentation" className="w-full bg-neutral-300">
-        <div className="flex flex-col justify-center items-center gap-6 sm:gap-8 md:gap-10 px-4 sm:px-6 md:px-px py-12 sm:py-16 md:py-20 w-full bg-neutral-100 mask-b-from-80% mask-b-to-100%">
+     <div id="documentation" className="w-full dark:bg-neutral-800/40 bg-neutral-300">
+        <div className="flex flex-col justify-center items-center gap-6 sm:gap-8 md:gap-10 px-4 sm:px-6 md:px-px py-12 sm:py-16 md:py-20 w-full dark:bg-neutral-800 bg-neutral-100 mask-b-from-80% mask-b-to-100%">
             <h1 className="text-2xl sm:text-3xl md:text-3xl font-medium text-transparent bg-linear-to-r from-blue-600 via-purple-400 50% to-orange-600 bg-clip-text tracking-tight">
                 Documentation
             </h1>

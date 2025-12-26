@@ -6,6 +6,7 @@ export default defineConfig({
   server:[{
     '/api':'freddy-ten.vercel.app'
   }],
+  'dark-mode':'class',
   plugins: [
     react(),
     tailwindcss(),
