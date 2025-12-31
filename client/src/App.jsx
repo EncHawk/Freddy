@@ -29,7 +29,7 @@ function App() {
   return (
       <div className='flex relative flex-col min-h-screen items-center bg-linear-to-b 
       from-neutral-100 to-blue-300/90
-      dark:bg-linear-to-b dark:from-neutral-800 dark:to-black/70
+      dark:bg-linear-to-b dark:from-slate-800 dark:to-zinc-700
       '>
         <Container>
           <div className='max-w-5xl w-full h-full absolute inset-0 mx-auto pointer-events-none hidden md:block'>

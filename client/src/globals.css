@@ -12,6 +12,7 @@
 }
 body{
     /* background: white; */
+    box-sizing: border-box;
 
 }
 .no-scroll{
