@@ -24,3 +24,6 @@ globals.ts
 *.njsproj
 *.sln
 *.sw?
+
+.server
+server/*
